@@ -1,0 +1,6 @@
+#include"Marco.h"
+#include"stock/Array.h"
+#include"basedatastruct/JNumber.h"
+#include"basedatastruct/BaseDataStruct.h"
+#include"exception/ExceptionMarco.h"
+#include"memory/SmartPtr.h"
