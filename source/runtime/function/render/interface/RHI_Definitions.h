@@ -67,7 +67,7 @@ enum RHIResourceType
     RT_PixelShader,
 };
 
-enum class ShaderUniformType
+enum ShaderUniformType
 {
     SUT_ConstantsBuffer,
     SUT_Texture,
@@ -229,12 +229,38 @@ enum WriteColorEnable
 };
 enum PrimitiveTopologyType
 {
-    PTT_Unknow,
-    PTT_Point,
-    PTT_Line,
-    PTT_Triangle,
-    PTT_Patch
+    PTT_Unknow = 0,
+    PTT_Point = 1,
+    PTT_Line = 2,
+    PTT_Triangle = 3,
+    PTT_Patch = 4
+
 };
+enum PrimitiveTopology // in pipeline
+{
+    PT_Unknow = 0,
+    PT_Point = 1,
+    PT_Line = 2,
+    PT_LineStrip = 3,
+    PT_Triangle = 4,
+    PT_TriangleStrip = 5,
+    PT_Line_Adj = 10,
+    PT_LineStrip_Adj = 11,
+    PT_Triangle_Adj = 12,
+    PT_TriangleStrip_Adj = 13,
+};
+/*
+D3D_PRIMITIVE_TOPOLOGY_UNDEFINED	= 0,
+        D3D_PRIMITIVE_TOPOLOGY_POINTLIST	= 1,
+        D3D_PRIMITIVE_TOPOLOGY_LINELIST	= 2,
+        D3D_PRIMITIVE_TOPOLOGY_LINESTRIP	= 3,
+        D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST	= 4,
+        D3D_PRIMITIVE_TOPOLOGY_TRIANGLESTRIP	= 5,
+        D3D_PRIMITIVE_TOPOLOGY_LINELIST_ADJ	= 10,
+        D3D_PRIMITIVE_TOPOLOGY_LINESTRIP_ADJ	= 11,
+        D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST_ADJ	= 12,
+        D3D_PRIMITIVE_TOPOLOGY_TRIANGLESTRIP_ADJ	= 13,
+        */
 
 enum TextureLoadType
 {
@@ -243,6 +269,13 @@ enum TextureLoadType
     TEXTURE_PNG,
 
 };
+
+enum TextureUsage
+{
+    TU_RenderTarget,
+    TU_Tex2D,
+};
+
 typedef
 enum ShaderFlags
 {

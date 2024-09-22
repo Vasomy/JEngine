@@ -15,9 +15,9 @@ public:
 	float32 MouseSensitivity;
 
 	float32 Aspect;
-	float32 Fov;
-	float32 ZNear;
-	float32 FNear;
+	float32 Fov = 90.0f;
+	float32 ZNear = 0.1f;
+	float32 FNear = 50.0f;
 
 	Matrix4x4 GetView()const {
 		return LookAt(Pos, Pos + Front, Up);

@@ -18,14 +18,14 @@ public:
 	void Tick();  // Call every frame.
 
 private:
-	double mSecondsPerCount;
-	double mDeltaTime;
+	double mSecondsPerCount =0;
+	double mDeltaTime = 0;
 
-	__int64 mBaseTime;
-	__int64 mPausedTime;
-	__int64 mStopTime;
-	__int64 mPrevTime;
-	__int64 mCurrTime;
+	__int64 mBaseTime = 0;
+	__int64 mPausedTime = 0;
+	__int64 mStopTime = 0;
+	__int64 mPrevTime = 0;
+	__int64 mCurrTime = 0;
 
 	bool mStopped;
 };
@@ -53,6 +53,7 @@ public:
 
 	HINSTANCE HInstance = nullptr;
 	HWND	  MainWnd = nullptr;
+	Vec2Int WindowSize = { 1600,960 };
 private:
 	void OnResize();
 
@@ -61,7 +62,6 @@ private:
 	WindowTimer mTimer;
 
 	bool OnResizing = false;
-	Vec2Int WindowSize = { 1920,1080 };
 	std::wstring WindowName = L"JEngine";
 	bool IsMaximized = false;
 	bool IsMinimized = false;

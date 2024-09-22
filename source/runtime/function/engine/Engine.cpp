@@ -12,7 +12,7 @@ void Engine::Start()
 void Engine::Run()
 {
 	MSG& msg = mGlobalSystemContext.mWindowSystem->msg;
-	while (!msg.message !=WM_QUIT)
+	while ((msg.message != WM_QUIT))
 	{
 		if (PeekMessage(&msg, 0, 0, 0, PM_REMOVE))
 		{
@@ -22,6 +22,7 @@ void Engine::Run()
 		else
 		{
 			mGlobalSystemContext.mWindowSystem->Tick();
+			editor->Tick();
 			Tick();
 		}
 	}

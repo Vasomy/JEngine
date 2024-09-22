@@ -21,6 +21,11 @@ public:
 class D3D12RHIVertexBuffer : public RHIVertexBuffer
 {
 public:
+	D3D12RHIVertexBuffer()
+		:RHIVertexBuffer()
+	{
+
+	}
 	D3D12RHIVertexBuffer(int32 InVertexByteSize, int32 InStride, int32 InOffset = 0)
 		:RHIVertexBuffer(InVertexByteSize, InStride, InOffset)
 	{
@@ -43,6 +48,11 @@ public:
 class D3D12RHIIndexBuffer : public RHIIndexBuffer
 {
 public:
+	D3D12RHIIndexBuffer()
+		:RHIIndexBuffer()
+	{
+
+	}
 	D3D12RHIIndexBuffer(int32 InIndexCount)
 		:RHIIndexBuffer(InIndexCount)
 	{
@@ -62,24 +72,41 @@ public:
 class D3D12ShaderUniformDesc
 {
 public:
+	D3D12ShaderUniformDesc(ShaderUniformType type,
+		ID3D12Device*Device,uint32 Count,uint32 Size,void* Data = nullptr,bool isConstant = false)
+	{
+		Buffer = std::make_unique<UploadBuffer>(Device, Count, Size, isConstant);
+		if (Data)
+			Buffer->CopyData(0, Data);
+	}
 	ShaderUniformType ValType;
-	uint8 BufferIndex;// 对应 buffer在着色器代码中的索引
-	D3D12_GPU_VIRTUAL_ADDRESS Address;
+	uint32 slot = 0;
+	std::unique_ptr<UploadBuffer> Buffer;
+	D3D12_GPU_VIRTUAL_ADDRESS GetGPUVirtualAddress()
+	{
+		return Buffer->Resource()->GetGPUVirtualAddress();
+	}
 };
 class D3D12RHIShaderUniformBuffer : public RHIShaderUniformBuffer
 {
 public:
+	D3D12RHIShaderUniformBuffer()
+		:RHIShaderUniformBuffer(0)
+	{}
 	D3D12RHIShaderUniformBuffer(int32 InUniformCount)
 		:RHIShaderUniformBuffer(InUniformCount)
 	{}
-	using UniformDescArray = std::vector<D3D12ShaderUniformDesc>;
+	using UniformDescArray = std::vector<D3D12ShaderUniformDesc*>;
 	UniformDescArray UniformDescs;
-	void Add(const D3D12ShaderUniformDesc& desc)
+	void Add(D3D12ShaderUniformDesc* desc)
 	{
-		UniformDescs.push_back(desc);
+		UniformDescs.push_back(nullptr);
+		UniformDescs[0] = std::move(desc);
 	}
 	virtual void Release()override
 	{
+		UniformDescs.clear();
+		UniformDescs.shrink_to_fit();
 	}
 	virtual void Destory()override
 	{
@@ -138,9 +165,9 @@ public:
 class D3D12RHIRenderTarget : public RHIRenderTarget
 {
 public:
-	D3D12RHIRenderTarget()
+	D3D12RHIRenderTarget(int32 rt_nums = 1)
 		:RHIRenderTarget() {
-		RTVTexture = std::vector<D3D12RHITexture>(1);
+		RTVTexture = std::vector<D3D12RHITexture>(rt_nums);
 	}
 	std::vector<D3D12RHITexture>RTVTexture;
 	D3D12RHITexture DSVTexture;
@@ -160,22 +187,24 @@ public:
 	}
 	void CreateHeaps(ID3D12Device*device,int32 RTVNums = 1,bool isSwapToScreen = false)
 	{
-		RTVTexture = std::vector<D3D12RHITexture>(RTVNums);
-		D3D12_DESCRIPTOR_HEAP_DESC rtvHeapDesc;
-		rtvHeapDesc.NumDescriptors = RTVNums;
-		rtvHeapDesc.Type = D3D12_DESCRIPTOR_HEAP_TYPE_RTV;
-		rtvHeapDesc.Flags = D3D12_DESCRIPTOR_HEAP_FLAG_NONE;
-		rtvHeapDesc.NodeMask = 0;
-		IfFailedHResultFile(device->CreateDescriptorHeap(
-			&rtvHeapDesc, IID_PPV_ARGS(RTVHeap.GetAddressOf())));
-
+	
 		D3D12_DESCRIPTOR_HEAP_DESC dsvHeapDesc;
 		dsvHeapDesc.NumDescriptors = 1;
 		dsvHeapDesc.Type = D3D12_DESCRIPTOR_HEAP_TYPE_DSV;
 		dsvHeapDesc.Flags = D3D12_DESCRIPTOR_HEAP_FLAG_NONE;
 		dsvHeapDesc.NodeMask = 0;
 		IfFailedHResultFile(device->CreateDescriptorHeap(
-			&dsvHeapDesc, IID_PPV_ARGS(DSVHeap.GetAddressOf())));
+			&dsvHeapDesc, IID_PPV_ARGS(&DSVHeap)));
+
+		D3D12_DESCRIPTOR_HEAP_DESC rtvHeapDesc;
+		rtvHeapDesc.NumDescriptors = RTVNums;
+		rtvHeapDesc.Type = D3D12_DESCRIPTOR_HEAP_TYPE_RTV;
+		rtvHeapDesc.Flags = D3D12_DESCRIPTOR_HEAP_FLAG_NONE;
+		rtvHeapDesc.NodeMask = 0;
+		IfFailedHResultFile(device->CreateDescriptorHeap(
+			&rtvHeapDesc, IID_PPV_ARGS(&RTVHeap)));
+
+		
 
 		auto rtvHeapHandle = RTVHeap->GetCPUDescriptorHandleForHeapStart();
 		uint32 rtvByteSize = device->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_RTV);
@@ -183,7 +212,7 @@ public:
 			D3D12RHITexture& tex = RTVTexture[i];
 			CD3DX12_CPU_DESCRIPTOR_HANDLE handle(rtvHeapHandle);
 			handle.Offset(i, rtvByteSize);
-			device->CreateShaderResourceView(tex.Resource.Resource.Get(), nullptr, handle);
+			device->CreateRenderTargetView(tex.Resource.Resource.Get(), nullptr, handle);
 		}
 		D3D12_DEPTH_STENCIL_VIEW_DESC stDepthStencilDesc = {};
 		//stDepthStencilDesc.Format = CastFormat(DSVTexture.GetDesc().TextureFormat); //should be that

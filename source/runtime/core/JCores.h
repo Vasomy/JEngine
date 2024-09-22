@@ -4,3 +4,4 @@
 #include"basedatastruct/BaseDataStruct.h"
 #include"exception/ExceptionMarco.h"
 #include"memory/SmartPtr.h"
+#include"Math.h"

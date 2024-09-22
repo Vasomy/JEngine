@@ -3,10 +3,16 @@
 #include<runtime/function/engine/Engine.h>
 #include<comdef.h>
 #include<d3d12.h>
+#include<editor/Editor.h>
+
+#define LogErrorWhenThrow
 int main()
 {
 	try {
-		Engine engine;
+		
+		Editor editor;
+		editor.Init();
+		Engine engine(&editor);
 		engine.Init();
 		engine.Run();
 	}
@@ -14,6 +20,7 @@ int main()
     {
 		
         MessageBox(nullptr, e.ToString().c_str(), L"HR FAILED", MB_OK);
+
         return 0;
     }
 }

@@ -10,16 +10,18 @@ struct Vertex
 
 	Vec2f Texcoord;
 	
-	//
-
-
 };
+
+
 struct RawMesh
 {
-	RHIVertexBuffer* VertexBuffer;
+	RHIVertexBuffer* VertexBuffer = nullptr;
 	uint32 VertexCounts;
-	RHIIndexBuffer*  IndexBuffer;
+	RHIIndexBuffer*  IndexBuffer = nullptr;
 	uint32 IndexCounts;
+
+	RHIShaderUniformBuffer* UniformBuffer = nullptr;
+
 };
 struct SubRawMesh
 {

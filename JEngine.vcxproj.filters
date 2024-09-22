@@ -117,6 +117,48 @@
     <ClInclude Include="source\runtime\function\render\FD3D12RHI\tools\DDSTextureLoader.h">
       <Filter>头文件</Filter>
     </ClInclude>
+    <ClInclude Include="source\runtime\function\render\Tools\GeometryGenerator.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="source\runtime\function\render\uirender\UIContext.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="source\runtime\function\render\uirender\ImGui\ImGuiContext.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="source\3rdParty\imgui-docking\imconfig.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="source\3rdParty\imgui-docking\imgui.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="source\3rdParty\imgui-docking\imgui_internal.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="source\3rdParty\imgui-docking\imstb_rectpack.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="source\3rdParty\imgui-docking\imstb_textedit.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="source\3rdParty\imgui-docking\imstb_truetype.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="source\3rdParty\imgui-docking\backends\imgui_impl_dx12.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="source\3rdParty\imgui-docking\backends\imgui_impl_win32.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="source\editor\EditorUITable.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="source\editor\Editor.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="source\editor\EditorUIContext.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="main.cpp">
@@ -159,6 +201,39 @@
       <Filter>源文件</Filter>
     </ClCompile>
     <ClCompile Include="source\runtime\core\memory\SmartPtr.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="source\runtime\function\render\Tools\GeometryGenerator.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="source\runtime\function\render\uirender\ImGui\ImGuiContext.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="source\3rdParty\imgui-docking\imgui.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="source\3rdParty\imgui-docking\imgui_demo.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="source\3rdParty\imgui-docking\imgui_draw.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="source\3rdParty\imgui-docking\imgui_tables.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="source\3rdParty\imgui-docking\imgui_widgets.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="source\3rdParty\imgui-docking\backends\imgui_impl_dx12.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="source\3rdParty\imgui-docking\backends\imgui_impl_win32.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="source\editor\EditorUITable.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="source\editor\EditorUIContext.cpp">
       <Filter>源文件</Filter>
     </ClCompile>
   </ItemGroup>

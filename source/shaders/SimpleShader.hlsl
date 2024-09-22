@@ -1,7 +1,7 @@
 
 cbuffer cbPerObject : register(b0)
 {
-    float4x4 gWorld;
+    float4 color;
 };
 
 struct VertexIn
@@ -22,8 +22,8 @@ struct VertexOut
 VertexOut VS( VertexIn vin )
 {
     VertexOut vout;
-    float4 posW = mul(float4(vin.PosL,1.0f), gWorld);
-    vout.PosW = posW.xyz;
+
+    vout.PosW = vin.PosL.xyz;
     vout.PosH = float4(vin.PosL, 1.0f);
 	return vout;
 }
@@ -31,5 +31,5 @@ VertexOut VS( VertexIn vin )
 float4 PS (VertexOut pin) : SV_Target
 {
 
-    return pin.PosH;
+    return color;
 }

@@ -6,6 +6,7 @@ WindowSystem* curWindowSystem = nullptr;
 bool WindowSystem::Init()
 {
 	curWindowSystem = this;
+	mTimer.Reset();
 	//HInstance = GetModuleHandle(NULL);
     if (!InitMainWindow())
         return false;
@@ -60,10 +61,12 @@ bool WindowSystem::InitMainWindow()
 	return true;
 }
 
+
 LRESULT WindowSystem::MsgProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
 {
-	static uint64 a = 0;
-	//std::cout << a++ << '\n';
+	if (UIContextImGui::WndProcHandler(hwnd, msg, wParam, lParam))
+		return true;
+
 	switch (msg)
 	{
 		// WM_ACTIVATE is sent when the window is activated or deactivated.  
@@ -208,6 +211,7 @@ void WindowSystem::OnMouseDown(WPARAM btnState, int x, int y)
 
 void WindowSystem::OnMouseUp(WPARAM btnState, int x, int y)
 {
+	ReleaseCapture();
 }
 
 void WindowSystem::OnMouseMove(WPARAM btnState, int x, int y)
@@ -217,6 +221,7 @@ void WindowSystem::OnMouseMove(WPARAM btnState, int x, int y)
 
 void WindowSystem::OnResize()
 {
+	std::cout << "OnResizing!\n";
 	mGlobalSystemContext.mRenderSystem->rhi->OnResizeWindow(WindowSize.x, WindowSize.y);
 }
 using namespace std;
@@ -250,6 +255,7 @@ void WindowSystem::CalculateFrameStats()
 		// Reset for next average.
 		frameCnt = 0;
 		timeElapsed += 1.0f;
+
 	}
 }
 
@@ -257,8 +263,9 @@ WindowTimer::WindowTimer()
 	: mSecondsPerCount(0.0), mDeltaTime(-1.0), mBaseTime(0),
 	mPausedTime(0), mPrevTime(0), mCurrTime(0), mStopped(false)
 {
-	__int64 countsPerSec;
+	__int64 countsPerSec = 0;
 	QueryPerformanceFrequency((LARGE_INTEGER*)&countsPerSec);
+
 	mSecondsPerCount = 1.0 / (double)countsPerSec;
 }
 

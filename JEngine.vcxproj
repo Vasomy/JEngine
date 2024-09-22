@@ -131,6 +131,17 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClInclude Include="source\3rdParty\imgui-docking\backends\imgui_impl_dx12.h" />
+    <ClInclude Include="source\3rdParty\imgui-docking\backends\imgui_impl_win32.h" />
+    <ClInclude Include="source\3rdParty\imgui-docking\imconfig.h" />
+    <ClInclude Include="source\3rdParty\imgui-docking\imgui.h" />
+    <ClInclude Include="source\3rdParty\imgui-docking\imgui_internal.h" />
+    <ClInclude Include="source\3rdParty\imgui-docking\imstb_rectpack.h" />
+    <ClInclude Include="source\3rdParty\imgui-docking\imstb_textedit.h" />
+    <ClInclude Include="source\3rdParty\imgui-docking\imstb_truetype.h" />
+    <ClInclude Include="source\editor\Editor.h" />
+    <ClInclude Include="source\editor\EditorUIContext.h" />
+    <ClInclude Include="source\editor\EditorUITable.h" />
     <ClInclude Include="source\runtime\core\basedatastruct\BaseDataStruct.h" />
     <ClInclude Include="source\runtime\core\basedatastruct\JNumber.h" />
     <ClInclude Include="source\runtime\core\exception\ExceptionMarco.h" />
@@ -162,12 +173,24 @@
     <ClInclude Include="source\runtime\function\render\RenderMeshNodeTree.h" />
     <ClInclude Include="source\runtime\function\render\RenderPassBase.h" />
     <ClInclude Include="source\runtime\function\render\RenderScene.h" />
+    <ClInclude Include="source\runtime\function\render\Tools\GeometryGenerator.h" />
+    <ClInclude Include="source\runtime\function\render\uirender\ImGui\ImGuiContext.h" />
+    <ClInclude Include="source\runtime\function\render\uirender\UIContext.h" />
     <ClInclude Include="source\runtime\function\system\GlobalSystemContext.h" />
     <ClInclude Include="source\runtime\function\system\RenderSystem.h" />
     <ClInclude Include="source\runtime\function\system\WindowSystem.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="main.cpp" />
+    <ClCompile Include="source\3rdParty\imgui-docking\backends\imgui_impl_dx12.cpp" />
+    <ClCompile Include="source\3rdParty\imgui-docking\backends\imgui_impl_win32.cpp" />
+    <ClCompile Include="source\3rdParty\imgui-docking\imgui.cpp" />
+    <ClCompile Include="source\3rdParty\imgui-docking\imgui_demo.cpp" />
+    <ClCompile Include="source\3rdParty\imgui-docking\imgui_draw.cpp" />
+    <ClCompile Include="source\3rdParty\imgui-docking\imgui_tables.cpp" />
+    <ClCompile Include="source\3rdParty\imgui-docking\imgui_widgets.cpp" />
+    <ClCompile Include="source\editor\EditorUIContext.cpp" />
+    <ClCompile Include="source\editor\EditorUITable.cpp" />
     <ClCompile Include="source\runtime\core\basedatastruct\BaseDataStruct.cpp" />
     <ClCompile Include="source\runtime\core\log\LogText.cpp" />
     <ClCompile Include="source\runtime\core\memory\SmartPtr.cpp" />
@@ -178,6 +201,8 @@
     <ClCompile Include="source\runtime\function\render\FD3D12RHI\tools\DDSTextureLoader.cpp" />
     <ClCompile Include="source\runtime\function\render\interface\RHIDynamic.cpp" />
     <ClCompile Include="source\runtime\function\render\RenderScene.cpp" />
+    <ClCompile Include="source\runtime\function\render\Tools\GeometryGenerator.cpp" />
+    <ClCompile Include="source\runtime\function\render\uirender\ImGui\ImGuiContext.cpp" />
     <ClCompile Include="source\runtime\function\system\GlobalSystemContext.cpp" />
     <ClCompile Include="source\runtime\function\system\RenderSystem.cpp" />
     <ClCompile Include="source\runtime\function\system\WindowSystem.cpp" />
