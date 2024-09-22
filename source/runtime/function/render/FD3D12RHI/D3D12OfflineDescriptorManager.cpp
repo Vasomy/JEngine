@@ -12,6 +12,19 @@ void D3D12OfflineDescriptorManager::Init(ID3D12Device* InDevice)
 	D3D12_DESCRIPTOR_HEAP_DESC offscreentexturedesc = TextureHeapDesc;
 	offscreentexturedesc.NumDescriptors = NumsOffScreenTexture;
 	IfFailedHResultFile(DxDevice->CreateDescriptorHeap(&offscreentexturedesc, IID_PPV_ARGS(&OffScreenRenderDescHeap)));
+
+	srvDesc.Shader4ComponentMapping = D3D12_DEFAULT_SHADER_4_COMPONENT_MAPPING;
+	srvDesc.ViewDimension = D3D12_SRV_DIMENSION_TEXTURE2D;
+	srvDesc.Texture2D.MostDetailedMip = 0;
+	srvDesc.Texture2D.MipLevels = 1;
+
+	renderTextureSrvDesc.Shader4ComponentMapping = D3D12_DEFAULT_SHADER_4_COMPONENT_MAPPING;
+	renderTextureSrvDesc.ViewDimension = D3D12_SRV_DIMENSION_TEXTURE2D;
+	renderTextureSrvDesc.Texture2D.MostDetailedMip = 0;
+	renderTextureSrvDesc.Texture2D.MipLevels = 1;
+	renderTextureSrvDesc.Format = DXGI_FORMAT_R8G8B8A8_UNORM;
+
+	mCbvSrvUavDescriptorSize = DxDevice->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV);
 }
 
 void D3D12OfflineDescriptorManager::AllocEmptyHeap()
@@ -68,7 +81,7 @@ void D3D12OfflineDescriptorManager::AllocHeapForFrameTexture(D3D12RHITexture* te
 	IfFailedLogTextErrorAssert(CurrentOffScreenTextureNum < NumsOffScreenTexture, "Nums of ScreenTexture over max OffScreenTexture Nums!");
 	CD3DX12_CPU_DESCRIPTOR_HANDLE cpuHandle(OffScreenRenderDescHeap->GetCPUDescriptorHandleForHeapStart());
 	cpuHandle.Offset(CurrentOffScreenTextureNum, mCbvSrvUavDescriptorSize);
-	DxDevice->CreateShaderResourceView(texture->Resource.Resource.Get(), &srvDesc, cpuHandle);
+	DxDevice->CreateShaderResourceView(texture->Resource.Resource.Get(), &renderTextureSrvDesc, cpuHandle);
 	CD3DX12_GPU_DESCRIPTOR_HANDLE gpuHandle(OffScreenRenderDescHeap->GetGPUDescriptorHandleForHeapStart());
 	gpuHandle.Offset(CurrentOffScreenTextureNum, mCbvSrvUavDescriptorSize);
 	texture->Resource.Address = gpuHandle.ptr;

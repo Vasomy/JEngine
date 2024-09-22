@@ -40,6 +40,7 @@ public:
 
 	D3D12_DESCRIPTOR_HEAP_DESC TextureHeapDesc;
 	D3D12_SHADER_RESOURCE_VIEW_DESC srvDesc = {};
+	D3D12_SHADER_RESOURCE_VIEW_DESC renderTextureSrvDesc = {};
 
 	UINT mCbvSrvUavDescriptorSize = 0;
 	uint32 NumsDescriptors = 1001;

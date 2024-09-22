@@ -27,6 +27,17 @@ struct Vector<T,4>
 	using val_type = T;
 	using vec_type = Vector<T, 4>;
 
+	Vector<T, 4>(T x, T y, T z, T w)
+		:x(x),y(y),z(z),w(w)
+	{
+
+	}
+	Vector<T, 4>()
+		:x(0),y(0),z(0),w(0)
+	{
+
+	}
+
 	T& operator[](int idx)
 	{
 		switch (idx)
@@ -49,6 +60,24 @@ struct Vector<T,4>
 			,left.y + right.y
 			,left.z + right.z
 			,left.w + right.w };
+	}
+	friend vec_type operator*(const val_type left, const vec_type& right)
+	{
+		return {
+			right.x*left,
+			right.y*left,
+			right.z*left,
+			right.w*left
+		};
+	}
+	friend vec_type operator*(const vec_type& left, const val_type right)
+	{
+		return{
+			left.x*right,
+			left.y*right,
+			left.z*right,
+			left.w*right
+		};
 	}
 	template<typename _Ty>
 	vec_type& operator*(_Ty right)
@@ -90,6 +119,17 @@ struct Vector<T, 3>
 {
 	using val_type = T;
 	using vec_type = Vector<T, 3>;
+	Vector<T, 3>(T x, T y, T z)
+		:x(x), y(y), z(z)
+	{
+
+	}
+	Vector<T, 3>()
+		: x(0), y(0), z(0)
+	{
+
+	}
+
 	T& operator[](int idx)
 	{
 		switch (idx)
@@ -109,6 +149,22 @@ struct Vector<T, 3>
 		return { left.x + right.x
 			,left.y + right.y
 			,left.z + right.z };
+	}
+	friend vec_type operator*(const val_type left, const vec_type& right)
+	{
+		return {
+			right.x * left,
+			right.y * left,
+			right.z * left
+		};
+	}
+	friend vec_type operator*(const vec_type& left, const val_type right)
+	{
+		return{
+			left.x * right,
+			left.y * right,
+			left.z * right
+		};
 	}
 	vec_type& operator-(vec_type& right)
 	{
@@ -147,6 +203,31 @@ struct Vector<T, 2>
 {
 	using val_type = T;
 	using vec_type = Vector<T, 2>;
+	Vector<T, 2>(T x, T y)
+		:x(x), y(y)
+	{
+
+	}
+	Vector<T, 2>()
+		: x(0), y(0)
+	{
+
+	}
+	friend vec_type operator*(const val_type left, const vec_type& right)
+	{
+		return {
+			right.x * left,
+			right.y * left
+		};
+	}
+	friend vec_type operator*(const vec_type& left, const val_type right)
+	{
+		return{
+			left.x * right,
+			left.y * right
+		};
+	}
+
 	T& operator[](int idx)
 	{
 		switch (idx)
@@ -198,6 +279,17 @@ struct Vector<T, 1>
 {
 	using val_type = T;
 	using vec_type = Vector<T, 1>;
+	Vector<T, 1>(T x)
+		:x(x)
+	{
+
+	}
+	Vector<T, 1>()
+		: x(0)
+	{
+
+	}
+
 	T& operator[](int idx)
 	{
 		switch (idx)
@@ -232,6 +324,40 @@ struct Vector<T, 1>
 
 	T x;
 };
+
+using Vec4f = Vector<float32, 4>;
+using Vec3f = Vector<float32, 3>;
+using Vec2f = Vector<float32, 2>;
+using Vec1f = Vector<float32, 1>;
+
+using Vec4 = Vec4f;
+using Vec3 = Vec3f;
+using Vec2 = Vec2f;
+using Vec1 = Vec1f;
+
+using Vec4Int = Vector<int32, 4>;
+using Vec3Int = Vector<int32, 3>;
+using Vec2Int = Vector<int32, 2>;
+using Vec1Int = Vector<int32, 1>;
+
+using Vec4UInt = Vector<uint32, 4>;
+using Vec3UInt = Vector<uint32, 3>;
+using Vec2UInt = Vector<uint32, 2>;
+using Vec1UInt = Vector<uint32, 1>;
+
+
+inline Vec4 __vectorcall Normalize(const Vec4& vec1) noexcept
+{
+	float32 d = sqrtf(vec1.x * vec1.x + vec1.y * vec1.y + vec1.z * vec1.z + vec1.w * vec1.w);
+	return { vec1.x / d,vec1.y / d,vec1.z / d,vec1.w / d };
+}
+
+inline Vec3 __vectorcall Normalize(const Vec3& vec1) noexcept
+{
+	float32 d = sqrtf(vec1.x * vec1.x + vec1.y * vec1.y + vec1.z * vec1.z);
+	return { vec1.x / d,vec1.y / d,vec1.z / d };
+}
+
 template<typename T>
 float32 Dot(const Vector<T,4>&vec1,const Vector<T,4>&vec2)
 {
@@ -255,25 +381,6 @@ Vector<float32, 3> Cross(const Vector<float32, 3>& v1, const Vector<float32, 3>&
 
 Vector<float32, 2>Cross(const Vector<float32, 2>& v1, const Vector<float32, 2>& v2);
 
-using Vec4f = Vector<float32, 4>;
-using Vec3f = Vector<float32, 3>;
-using Vec2f = Vector<float32, 2>;
-using Vec1f = Vector<float32, 1>;
-
-using Vec4 = Vec4f;
-using Vec3 = Vec3f;
-using Vec2 = Vec2f;
-using Vec1 = Vec1f;
-
-using Vec4Int = Vector<int32, 4>;
-using Vec3Int = Vector<int32, 3>;
-using Vec2Int = Vector<int32, 2>;
-using Vec1Int = Vector<int32, 1>;
-
-using Vec4UInt = Vector<uint32, 4>;
-using Vec3UInt = Vector<uint32, 3>;
-using Vec2UInt = Vector<uint32, 2>;
-using Vec1UInt = Vector<uint32, 1>;
 
 
 template<typename T,int size>

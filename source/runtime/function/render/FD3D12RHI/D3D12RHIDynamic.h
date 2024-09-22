@@ -11,8 +11,13 @@
 #pragma comment(lib, "dxgi.lib")
 #pragma comment(lib, "d3dcompiler.lib")
 #include<iostream>
+class UIContextBase;
+class UIContextImGui;
 class D3D12RHIDynamic : public RHIDynamic
 {
+public:
+	friend class UIContextBase;
+	friend class UIContextImGui;
 public:
 	D3D12RHIDynamic()
 	{
@@ -25,14 +30,23 @@ public:
 	
 
 	virtual void Init()override;
-	virtual void CreateVertexBuffer(RHIVertexBuffer* VertexBuffer,
+	virtual void CreateVertexBuffer(RHIVertexBuffer** VertexBuffer,
 		uint32 InitDataSize, uint32 Stride, uint32 offset)override;
-	virtual void CreateVertexBufferAndInitialize(RHIVertexBuffer* VertexBuffer,
-		void** InitData, uint32 InitDataSize, uint32 Strid, uint32 offset)override;
-	virtual void CreateIndexBuffer(RHIIndexBuffer* IndexBuffer, uint32 IndexCount)override;
-	virtual void CreateIndexBufferAndInitialize(RHIIndexBuffer* IndexBuffer, 
-		void** Indexdata,
+	virtual void CreateVertexBufferAndInitialize(RHIVertexBuffer** VertexBuffer,
+		const void* InitData, uint32 InitDataSize, uint32 Strid, uint32 offset)override;
+	virtual void CreateIndexBuffer(RHIIndexBuffer** IndexBuffer, uint32 IndexCount)override;
+	virtual void CreateIndexBufferAndInitialize(RHIIndexBuffer** IndexBuffer, 
+		const void* Indexdata,
 		uint32 IndexCount)override;
+	virtual void CreateUniformBuffer(RHIShaderUniformBuffer** ShaderUniformBuffer) override;// init
+	virtual void AddUniformBufferPartView(RHIShaderUniformBuffer* ShaderUniformBuffer, 
+		void* data, 
+		uint32 size/*unit data size*/, 
+		uint32 count,
+		ShaderUniformType type,
+		bool isConstant = false) override;
+	virtual void UpdateUniformBuffer(RHIShaderUniformBuffer* ShaderUniformBuffer, uint32 index, void* data, uint32 UpdateStart) override;
+
 	virtual void CreateRootSignature(RHISampler& Samplers,
 		ShaderUniformInfo UniformInfo,
 		JString rootSigName) override;
@@ -57,13 +71,15 @@ public:
 
 	virtual void OnResizeWindow(int32 width,int32 height)override;
 
-protected:
-	void SetRootSignature_v(ID3D12RootSignature* root_sig);
-	void SetGraphicsPipeLine_v(ID3D12PipelineState* pipeline_state);
+
 public:
+	virtual void PrepareForRender()override;
 	virtual void ResetRenderState() override;//reset pipeline, rootsig ... something else
 
-	virtual void SubmitRenderData(RHIVertexBuffer* VertexBuffer, RHIIndexBuffer* IndexBuffer,RHIShaderUniformBuffer*UniformBuffer)override;
+	virtual void SubmitRenderData(RHIVertexBuffer* VertexBuffer, 
+		RHIIndexBuffer* IndexBuffer,
+		RHIShaderUniformBuffer*UniformBuffer,
+		PrimitiveTopology TopologyType)override;
 
 	virtual void SubmitRender()override;
 	virtual void DrawInstance()override;
@@ -75,6 +91,9 @@ public:
 	virtual void CloseCommandList()override;//end record command list
 
 	virtual void ExecuteCommandList() override;
+
+public:
+	virtual void* GetTextureDataForUI(TextureUsage flags, uint32 offset) override;// 主要是 为 ImGui提供 void*作为渲染材质,offset 为所要材质在 堆中的偏移量
 
 private:
 	
@@ -109,12 +128,11 @@ private:
 	template<typename RHIType>
 	typename D3D12TypeTraits<RHIType>::traits_type* ResourceCast(RHIType* rhi_resource);
 
-	using VertexBufferArray = std::vector<D3D12_VERTEX_BUFFER_VIEW>;
-	using IndexBufferArray = std::vector<D3D12_INDEX_BUFFER_VIEW>;
-	using UniformBufferArray = std::vector<D3D12RHIShaderUniformBuffer>;
-	VertexBufferArray VertexBufferViews;
-	IndexBufferArray IndexBufferViews;
-	UniformBufferArray UniformBufferViews;
+	using DrawInstancedViewArray = std::vector<D3D12DrawInstancedView>;
+	using PassDataViewArray = std::vector<D3D12UniformSlotDesc>;
+	PassDataViewArray PassDataViews;
+	DrawInstancedViewArray DrawInstancedViews;
+
 	JD3D12RenderSettingContext RenderSettingContext;
 
 	ComPtr<IDXGIFactory4> DxFactory;

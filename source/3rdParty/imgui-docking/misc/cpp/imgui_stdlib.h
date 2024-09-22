@@ -9,7 +9,7 @@
 // - v0.10: Initial version. Added InputText() / InputTextMultiline() calls with std::string
 
 #pragma once
-#include "imgui-docking/imgui.h"
+#include "../../imgui.h"
 
 #include <string>
 

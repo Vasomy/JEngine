@@ -2,19 +2,19 @@
 #ifndef D3D12UTIL_H
 #define D3D12UTIL_H
 
-#include"D3D12Resource.h"
 #include"d3dx12.h"
+#include<d3d12.h>
 #include<D3Dcompiler.h>
 #include<iostream>
+#include<runtime/core/JCores.h>
+namespace D3DUtil{
 
-class D3DUtil {
-public:
-    static Microsoft::WRL::ComPtr<ID3D12Resource>CreateDefaultBuffer(ID3D12Device* device,
+    Microsoft::WRL::ComPtr<ID3D12Resource>CreateDefaultBuffer(ID3D12Device* device,
         ID3D12GraphicsCommandList* cmdList,
         const void* initData,
         UINT64 byteSize,
         ComPtr<ID3D12Resource>& uploadBuffer);
-    inline static Microsoft::WRL::ComPtr<ID3DBlob> CompileShader(
+    inline Microsoft::WRL::ComPtr<ID3DBlob> CompileShader(
         const std::wstring& filename,
         const D3D_SHADER_MACRO* defines,
         const std::string& entrypoint,
@@ -50,5 +50,11 @@ public:
 
         return byteCode;
     }
+
+    inline UINT CalcConstantBufferByteSize(UINT byteSize)
+    {
+        return (byteSize + 255) & ~255;
+    }
+
 };
 #endif

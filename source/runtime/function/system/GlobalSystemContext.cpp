@@ -10,4 +10,5 @@ void GlobalSystemContext::Init()
 
 	mRenderSystem = std::make_shared<RenderSystem>();
 	mRenderSystem->Init(RHIInterfaceType::DirectX12);
+
 }

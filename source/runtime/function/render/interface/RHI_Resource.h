@@ -22,8 +22,8 @@ public:
 	}
 	virtual ~RHIResource() {}
 
-	virtual void Release() = 0;
-	virtual void Destory() = 0;
+	virtual void Release() = 0; // 等同于 Reset 清空数据 但是保留类本身
+	virtual void Destory() = 0; // 销毁类本身
 
 
 public:
@@ -90,6 +90,11 @@ public:
 	RHIBuffer()
 		:RHIResource(RHIResourceType::RT_Buffer)
 	{}
+	RHIBuffer(RHIBufferUsage usage)
+		:Usage(usage),RHIResource(RT_Buffer)
+	{
+
+	}
 	RHIBuffer(uint32 InSize,const RHIBufferUsage&InUsage,uint32 InStride/*sizeof(T)*/)
 		:RHIResource(RHIResourceType::RT_Buffer),
 		Size(InSize), Stride(InStride), Usage(InUsage)
@@ -183,6 +188,7 @@ struct RHITextureDesc
 		RHITextureDesc desc;
 		desc.TextureFormat = F_R8G8B8A8_Unorm;
 		desc.Size = { width,height };
+		desc.CVB.ClearBindingType = ClearBinding::CB_Color;
 		return desc;
 	}
 	static RHITextureDesc RenderTargetDepthStencil(int32 width = 1920,int32 height = 1080)
@@ -190,6 +196,8 @@ struct RHITextureDesc
 		RHITextureDesc desc;
 		desc.TextureFormat = F_D24_Unorm_S8_Uint;
 		desc.Size = { width,height };
+		desc.CVB.ClearBindingType = ClearBinding::CB_DepthStencil;
+		desc.CVB.Val.DepthStencil = { 1.0f,0 };
 		return desc;
 	}
 };
@@ -207,6 +215,10 @@ public:
 	{
 		
 	}
+
+	virtual void Release()override{}
+	virtual void Destory()override{}
+
 	void SetDesc(const RHITextureDesc& idesc)
 	{
 		desc = idesc;
@@ -250,7 +262,7 @@ class RHIVertexBuffer : public RHIBuffer
 {
 public:
 	RHIVertexBuffer()
-		:RHIBuffer()
+		:RHIBuffer(RHIBufferUsage::VertexBuffer)
 	{}
 	RHIVertexBuffer(int32 InVertexCount, int32 InStride, int32 InOffset = 0)
 		:RHIBuffer(InVertexCount, RHIBufferUsage::VertexBuffer, InStride),
@@ -258,6 +270,10 @@ public:
 	{
 
 	}
+
+	virtual void Release()override{}
+	virtual void Destory()override{}
+
 	int32 GetVertexCount() { return Size; }
 	int32 GetVertexOffset() { return Offset; }
 	int32 GetVertexStride() { return Stride; }
@@ -273,15 +289,22 @@ private:
 class RHIIndexBuffer : public RHIBuffer
 {
 public:
-	using index_type = uint32;
+	using index_type = uint16;
+	RHIIndexBuffer()
+	: RHIBuffer(0,RHIBufferUsage::IndexBuffer,sizeof(index_type))
+	{}
 	RHIIndexBuffer(int32 InIndexCount)
 		:RHIBuffer(InIndexCount,RHIBufferUsage::IndexBuffer,sizeof(index_type))
 	{}
-	int32 GetIndexCount() { return Size; }
-	void Init(int32 InIndexCount)
+	index_type GetIndexCount() { return IndexCount; }
+	void Init(index_type InIndexCount)
 	{
-		Size = InIndexCount;
+		Size = InIndexCount*sizeof(index_type);
+		IndexCount = InIndexCount;
 	}
+	index_type IndexCount;
+	virtual void Release()override{}
+	virtual void Destory()override{}
 };
 class RHIShaderUniformBuffer : public RHIBuffer
 {

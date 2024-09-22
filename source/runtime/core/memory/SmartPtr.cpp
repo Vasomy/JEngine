@@ -10,3 +10,4 @@ inline std::wstring ConvertToWideString(std::string& input)
     free(ret);
     return tar;
 }
+

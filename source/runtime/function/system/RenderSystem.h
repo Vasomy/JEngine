@@ -12,9 +12,14 @@ public:
 	void Tick(float32 dt);
 
 public:
+
+	void __RHIDebug();
+
 	void ChangeRHIType();
 	std::shared_ptr<RHIDynamic>rhi;
 	RHIInterfaceType RenderHardwareInterfaceType;
+
+	std::shared_ptr<UIContextImGui>UIContext;
 
 };
 

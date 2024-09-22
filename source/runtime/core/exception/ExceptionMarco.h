@@ -39,7 +39,8 @@ public:
     std::wstring wfn = to_wide_string(__FILE__);                       \
     if(FAILED(hr__)) { throw DxException(hr__, L#x, wfn, __LINE__); } \
 }
-#define IfFailedLogTextErrorAssert(x,content) {if(!(x)){LogTextError(content);assert(0);}}
+#define __LogError__ {ShowError();}
+#define IfFailedLogTextErrorAssert(x,content) {if(!(x)){LogTextError(content);__LogError__;assert(0);}}
 #define IfFailedLogTextWarningAssert(x,content) {if(!(x)){LogTextWarning(content);assert(0);}}
 
 #endif // !EXCEPTION_MARCO_H

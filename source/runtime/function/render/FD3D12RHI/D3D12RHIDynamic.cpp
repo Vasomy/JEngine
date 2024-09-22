@@ -2,6 +2,7 @@
 #include<array>
 #include"D3D12Util.h"
 #include"../../../core/exception/ExceptionMarco.h"
+#include"../../../core/memory/SmartPtr.h"
 #include"d3dx12.h"
 #include<d3d12.h>
 #include"../../system/GlobalSystemContext.h"
@@ -9,48 +10,80 @@
 #include<DirectXColors.h>
 #define ReleaseCom(X) {if(X){X->Release();X=0;}}
 
+
+#include<3rdParty/imgui-docking/imgui.h>
+#include<3rdParty/imgui-docking/backends/imgui_impl_dx12.h>
+#include<3rdParty/imgui-docking/backends/imgui_impl_win32.h>
+
 void D3D12RHIDynamic::Init()
 {
 	InitDirectX12();
 	OfflineDescriptorHeapManager.Init(DxDevice.Get());
 }
 
-void D3D12RHIDynamic::CreateVertexBuffer(RHIVertexBuffer* VertexBuffer,
+void D3D12RHIDynamic::CreateVertexBuffer(RHIVertexBuffer** VertexBuffer,
 	uint32 InitDataSize,
 	uint32 Stride,
 	uint32 offset)
 {
-	D3D12RHIVertexBuffer* D3dVertexBuffer = ResourceCast(VertexBuffer);
+	*VertexBuffer = new D3D12RHIVertexBuffer();
+	D3D12RHIVertexBuffer* D3dVertexBuffer = ResourceCast(*VertexBuffer);
 	D3dVertexBuffer->Init(InitDataSize, Stride, offset);
 }
 
-void D3D12RHIDynamic::CreateVertexBufferAndInitialize(RHIVertexBuffer* VertexBuffer,
-	void** InitData,
+void D3D12RHIDynamic::CreateVertexBufferAndInitialize(RHIVertexBuffer** VertexBuffer,
+	const void* InitData,
 	uint32 InitDataSize,
 	uint32 Stride,
 	uint32 offset)
 {
-	D3D12RHIVertexBuffer* D3dVertexBuffer = ResourceCast(VertexBuffer);
+	*VertexBuffer = new D3D12RHIVertexBuffer();
+	D3D12RHIVertexBuffer* D3dVertexBuffer = ResourceCast(*VertexBuffer);
 	D3dVertexBuffer->Init(InitDataSize, Stride, offset);
-	D3dVertexBuffer->Resource.Resource=D3DUtil::CreateDefaultBuffer(DxDevice.Get(), DxCMDList.Get(), 
+	D3dVertexBuffer->Resource.Resource = D3DUtil::CreateDefaultBuffer(DxDevice.Get(), DxCMDList.Get(), 
 		InitData, InitDataSize, D3dVertexBuffer->Resource.UploadHeap);
 	D3dVertexBuffer->ResourceAddress = D3dVertexBuffer->Resource.Resource->GetGPUVirtualAddress();
 
 }
 
-void D3D12RHIDynamic::CreateIndexBuffer(RHIIndexBuffer* IndexBuffer, uint32 IndexCount)
+void D3D12RHIDynamic::CreateIndexBuffer(RHIIndexBuffer** IndexBuffer, uint32 IndexCount)
 {
-	D3D12RHIIndexBuffer* D3dIndexBuffer = ResourceCast(IndexBuffer);
+	*IndexBuffer = new D3D12RHIIndexBuffer();
+	D3D12RHIIndexBuffer* D3dIndexBuffer = ResourceCast(*IndexBuffer);
 	D3dIndexBuffer->Init(IndexCount);
 }
 
-void D3D12RHIDynamic::CreateIndexBufferAndInitialize(RHIIndexBuffer* IndexBuffer, void** Indexdata, uint32 IndexCount)
+void D3D12RHIDynamic::CreateIndexBufferAndInitialize(RHIIndexBuffer** IndexBuffer, const void* Indexdata, uint32 IndexCount)
 {
-	D3D12RHIIndexBuffer* D3dIndexBuffer = ResourceCast(IndexBuffer);
+	*IndexBuffer = new D3D12RHIIndexBuffer();
+	D3D12RHIIndexBuffer* D3dIndexBuffer = ResourceCast(*IndexBuffer);
 	D3dIndexBuffer->Init(IndexCount);
 	D3dIndexBuffer->Resource.Resource = D3DUtil::CreateDefaultBuffer(DxDevice.Get(),
 		DxCMDList.Get(), Indexdata, IndexCount, D3dIndexBuffer->Resource.UploadHeap);
 	D3dIndexBuffer->ResourceAddress = D3dIndexBuffer->Resource.Resource->GetGPUVirtualAddress();
+}
+
+void D3D12RHIDynamic::CreateUniformBuffer(RHIShaderUniformBuffer** ShaderUniformBuffer)
+{
+	*ShaderUniformBuffer = new D3D12RHIShaderUniformBuffer();
+}
+
+void D3D12RHIDynamic::AddUniformBufferPartView(RHIShaderUniformBuffer* ShaderUniformBuffer, 
+	void* data, 
+	uint32 size,
+	uint32 count,
+	ShaderUniformType type,
+	bool isConstant)
+{
+	D3D12RHIShaderUniformBuffer* D3dUniformBuffer = ResourceCast(ShaderUniformBuffer);
+	D3D12ShaderUniformDesc* desc = new D3D12ShaderUniformDesc(type,DxDevice.Get(),count,size,data,isConstant);
+	D3dUniformBuffer->Add(desc);
+}
+
+void D3D12RHIDynamic::UpdateUniformBuffer(RHIShaderUniformBuffer* ShaderUniformBuffer, uint32 index, void* data, uint32 UpdateStart)
+{
+	D3D12RHIShaderUniformBuffer* D3dShaderUniformBuffer = ResourceCast(ShaderUniformBuffer);
+	D3dShaderUniformBuffer->UniformDescs[index]->Buffer->CopyData(UpdateStart, data);
 }
 
 void D3D12RHIDynamic::CreateRootSignature(RHISampler& Samplers, ShaderUniformInfo UniformInfo,JString rootSigName)
@@ -144,10 +177,7 @@ void D3D12RHIDynamic::CreatePipeLineState(const RHIGraphicsPipeLineState& PipeLi
 	std::vector<D3D12_INPUT_ELEMENT_DESC>layouts;
 	for(int32 i =0;i<initializer.ShaderLayout.layout.size();++i)
 		layouts.push_back(GetShaderInputLayout(initializer.ShaderLayout.layout[i]));
-	for (int i = 0; i < layouts.size(); ++i)
-	{
-		std::cout << layouts[i].SemanticName << '\n';
-	}
+
 	pipelineDesc.InputLayout = { layouts.data(),(UINT)layouts.size() };
 	pipelineDesc.pRootSignature = mRootSignatures[PipeLineState.RootSigName].Get();
 	pipelineDesc.BlendState = GetBlendDesc(initializer.BlendStateDesc);
@@ -254,11 +284,15 @@ void D3D12RHIDynamic::LoadTexture(JString file_name, RHITexture* out_texture, RH
 void D3D12RHIDynamic::CreateRenderTarget(JString render_target_name,RHIRenderTarget* render_target,
 	RHITextureDesc rtv_texture, RHITextureDesc dsv_texture,int32 rt_nums)/////////////////////// 目前只能自定义创建一个只有一个RtvTex的RenderTarget
 {
-	D3D12RHIRenderTarget* D3dRT = ResourceCast(render_target);
+	D3D12RHIRenderTarget* D3dRT;
+	if (render_target)
+		D3dRT = ResourceCast(render_target);
+	else D3dRT = new D3D12RHIRenderTarget(rt_nums);
 	rt_nums = 1;
 	for(int i =0;i<1;++i)//***************************************//
 		CreateRenderTargetTexture(&D3dRT->RTVTexture[i], rtv_texture, &D3dRT->DSVTexture, dsv_texture);
 	D3dRT->CreateHeaps(DxDevice.Get(), rt_nums);
+	OfflineDescriptorHeapManager.AllocHeapForFrameTexture(&D3dRT->RTVTexture[0]);
 
 	mRenderTargets[render_target_name] = std::shared_ptr<D3D12RHIRenderTarget>(D3dRT);
 }
@@ -278,6 +312,14 @@ void D3D12RHIDynamic::CreateRenderTargetTexture(RHITexture* out_rtv_texture, RHI
 		0,
 		D3D12_RESOURCE_FLAG_ALLOW_DEPTH_STENCIL
 	);
+	
+	auto color = Colors::LightSteelBlue;
+	Vec4f v4Color;
+	memcpy(&v4Color, &color, sizeof(float32) * 4);
+	rtv_texture_desc.CVB.Val.Color = v4Color;
+	dsvTex->SetDesc(dsv_texture_desc);
+	rtvTex->SetDesc(rtv_texture_desc);
+
 	D3D12_CLEAR_VALUE optClear;
 	optClear.Format = mDepthStencilFormat;
 	optClear.DepthStencil.Depth = 1.0f;
@@ -293,7 +335,6 @@ void D3D12RHIDynamic::CreateRenderTargetTexture(RHITexture* out_rtv_texture, RHI
 	));
 
 	D3D12_CLEAR_VALUE stClear;
-	auto color = Colors::LightSteelBlue;
 	memcpy(&stClear.Color, &color, 4 * sizeof(float));
 	stClear.Format = mBackBufferFormat;
 
@@ -318,7 +359,6 @@ void D3D12RHIDynamic::CreateRenderTargetTexture(RHITexture* out_rtv_texture, RHI
 		, IID_PPV_ARGS(rtvTex->Resource.Resource.GetAddressOf())
 	));
 
-	OfflineDescriptorHeapManager.AllocHeapForFrameTexture(rtvTex);
 
 }
 
@@ -345,6 +385,7 @@ void D3D12RHIDynamic::OnResizeWindow(int32 width,int32 height)
 
 	// Flush before changing any resources.
 	FlushCommand();
+	std::cout << width << " " << height << "\n";
 
 	IfFailedHResultFile(DxCMDList->Reset(DxCMDAlloc.Get(), nullptr));
 	auto& rt = mRenderTargets["SwapToScreen"];
@@ -439,13 +480,14 @@ void D3D12RHIDynamic::OnResizeWindow(int32 width,int32 height)
 	SwapChainBufferHeight = height;
 }
 
-void D3D12RHIDynamic::SetRootSignature_v(ID3D12RootSignature* root_sig)// travial
-{
-	
-}
 
-void D3D12RHIDynamic::SetGraphicsPipeLine_v(ID3D12PipelineState* pipeline_state)// travial
+void D3D12RHIDynamic::PrepareForRender()
 {
+	auto cmdAlloc = DxCMDAlloc;
+
+	IfFailedHResultFile(cmdAlloc->Reset());
+
+	IfFailedHResultFile(DxCMDList->Reset(cmdAlloc.Get(), nullptr));
 }
 
 void D3D12RHIDynamic::ResetRenderState()
@@ -458,12 +500,6 @@ void D3D12RHIDynamic::ResetRenderState()
 	// Swap the back and front buffers
 	IfFailedHResultFile(DxSwapChain->Present(0, 0));
 	//mCurrBackBuffer = (mCurrBackBuffer + 1) % SwapChainBufferCount;
-	++mCurrentFence;
-
-	// Add an instruction to the command queue to set a new fence point. 
-	// Because we are on the GPU timeline, the new fence point won't be 
-	// set until the GPU finishes processing all the commands prior to this Signal().
-	DxCMDQueue->Signal(DxFence.Get(), mCurrentFence);
 	iCurrentBackBuffer++;
 	iCurrentBackBuffer %= SwapChainBufferCount;
 	FlushCommand();
@@ -472,7 +508,8 @@ void D3D12RHIDynamic::ResetRenderState()
 void D3D12RHIDynamic::SubmitRenderData(
 	RHIVertexBuffer* InVertexBuffer,
 	RHIIndexBuffer* InIndexBuffer,
-	RHIShaderUniformBuffer*InShaderUniformBuffer)
+	RHIShaderUniformBuffer*InShaderUniformBuffer,
+	PrimitiveTopology TopologyType)
 {
 	D3D12RHIVertexBuffer* VertexBuffer = ResourceCast(InVertexBuffer);
 	D3D12RHIIndexBuffer* IndexBuffer = ResourceCast(InIndexBuffer);
@@ -483,12 +520,34 @@ void D3D12RHIDynamic::SubmitRenderData(
 	D3D12_INDEX_BUFFER_VIEW ibv = {
 		IndexBuffer->ResourceAddress,
 		IndexBuffer->GetSize(),
-		DXGI_FORMAT_R32_UINT
+		DXGI_FORMAT_R16_UINT
 	};
-	VertexBufferViews.push_back(vbv);
-	IndexBufferViews.push_back(ibv);
-	D3D12RHIShaderUniformBuffer InstShaderUniformBuffer = *ShaderUniformBuffer;
-	UniformBufferViews.push_back(InstShaderUniformBuffer);
+	D3D12DrawInstancedView div;
+	div.vbv = vbv;
+	div.ibv = ibv;
+	div.IndexCount = IndexBuffer->GetIndexCount();
+	div.PrimitiveTopology = static_cast<D3D12_PRIMITIVE_TOPOLOGY>(TopologyType);
+	for (int32 i = 0; i < ShaderUniformBuffer->UniformDescs.size(); ++i)
+	{
+		D3D12UniformSlotDesc desc{
+			ShaderUniformBuffer->UniformDescs[i]->slot,
+			ShaderUniformBuffer->UniformDescs[i]->GetGPUVirtualAddress()
+		};
+		switch (ShaderUniformBuffer->UniformDescs[i]->ValType)
+		{
+		case ShaderUniformType::SUT_ConstantsBuffer:
+			div.ConstantsUniformDesc.push_back(desc);
+			break;
+		case ShaderUniformType::SUT_Texture:
+			div.TexturesUniformDesc.push_back(desc);
+			break;
+		default:
+			break;
+		}
+	}
+	DrawInstancedViews.push_back(div);
+
+
 }
 #include<DirectXColors.h>
 void D3D12RHIDynamic::SubmitRender() // should Render To Texture
@@ -504,11 +563,8 @@ void D3D12RHIDynamic::SubmitRender() // should Render To Texture
 	assert(mRenderTargets.count(RenderSettingContext.RenderTargetName));
 	auto& rendertarget = mRenderTargets.at(RenderSettingContext.RenderTargetName);
 
-	auto cmdAlloc = DxCMDAlloc;
 
-	IfFailedHResultFile(cmdAlloc->Reset());
-
-	IfFailedHResultFile(DxCMDList->Reset(cmdAlloc.Get(), pipeline.Get()));
+	DxCMDList->SetPipelineState(pipeline.Get());
 
 	auto RTVHandle = rendertarget->RTVHeap->GetCPUDescriptorHandleForHeapStart();
 	auto DSVHandle = rendertarget->DSVHeap->GetCPUDescriptorHandleForHeapStart();
@@ -518,18 +574,19 @@ void D3D12RHIDynamic::SubmitRender() // should Render To Texture
 	DxCMDList->ResourceBarrier(1, &before_barrier);
 	Vec4f clear_color = rendertarget->RTVTexture[0].ClearColorValue();
 	DxCMDList->OMSetRenderTargets(1, &RTVHandle, true, &DSVHandle);
-	DxCMDList->ClearRenderTargetView(RTVHandle, Colors::Red, 0, nullptr);
+	DxCMDList->ClearRenderTargetView(RTVHandle,clear_color.data(), 0, nullptr);
 	DxCMDList->ClearDepthStencilView(DSVHandle, D3D12_CLEAR_FLAG_DEPTH | D3D12_CLEAR_FLAG_STENCIL, 
 		rendertarget->DSVTexture.ClearDepthValue(),
 		rendertarget->DSVTexture.ClearStencilValue()
 		, 0, nullptr);
 	DxCMDList->RSSetScissorRects(1, &mRect);
 	DxCMDList->RSSetViewports(1, &mViewPort);
-	ID3D12DescriptorHeap* descHeap[] = { OfflineDescriptorHeapManager.OffScreenRenderDescHeap.Get() };
+	ID3D12DescriptorHeap* descHeap[] = { OfflineDescriptorHeapManager.TextureDescHeap.Get() };
 	DxCMDList->SetDescriptorHeaps(_countof(descHeap), descHeap);
 	DxCMDList->SetGraphicsRootSignature(rootsig.Get());
 
 	DrawInstance();
+	
 	auto after_barrier = CD3DX12_RESOURCE_BARRIER::Transition(rendertarget->RTVTexture[0].Resource.Resource.Get(),
 		D3D12_RESOURCE_STATE_RENDER_TARGET, D3D12_RESOURCE_STATE_NON_PIXEL_SHADER_RESOURCE | D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE | D3D12_RESOURCE_STATE_GENERIC_READ);
 	DxCMDList->ResourceBarrier(1, &after_barrier);
@@ -539,7 +596,30 @@ void D3D12RHIDynamic::SubmitRender() // should Render To Texture
 
 void D3D12RHIDynamic::DrawInstance()
 {
-	
+	for (int32 i = 0; i < PassDataViews.size(); ++i)
+	{
+		DxCMDList->SetGraphicsRootConstantBufferView(PassDataViews[i].Slot, PassDataViews[i].Address);
+	}
+	for (int i = 0; i < DrawInstancedViews.size(); ++i)
+	{
+		DxCMDList->IASetVertexBuffers(0, 1, &DrawInstancedViews[i].vbv);
+		DxCMDList->IASetIndexBuffer(&DrawInstancedViews[i].ibv);
+		DxCMDList->IASetPrimitiveTopology(DrawInstancedViews[i].PrimitiveTopology);
+
+		for (int32 cbvIdx = 0; cbvIdx < DrawInstancedViews[i].ConstantsUniformDesc.size(); ++cbvIdx)
+		{
+			DxCMDList->SetGraphicsRootConstantBufferView(DrawInstancedViews[i].ConstantsUniformDesc[cbvIdx].Slot,
+				DrawInstancedViews[i].ConstantsUniformDesc[cbvIdx].Address);
+		}
+		for (int32 tvIdx = 0; tvIdx < DrawInstancedViews[i].TexturesUniformDesc.size(); ++tvIdx)
+		{
+			D3D12_GPU_DESCRIPTOR_HANDLE tex={ DrawInstancedViews[i].TexturesUniformDesc[tvIdx].Address };
+			DxCMDList->SetGraphicsRootDescriptorTable(DrawInstancedViews[i].TexturesUniformDesc[tvIdx].Slot, tex);
+		}
+
+		DxCMDList->DrawIndexedInstanced(DrawInstancedViews[i].IndexCount, 1, DrawInstancedViews[i].StartIndexLocation, DrawInstancedViews[i].BaseVertexLocation, 0);
+
+	}
 }
 
 void D3D12RHIDynamic::SwapBackBufferToScreen()
@@ -547,13 +627,8 @@ void D3D12RHIDynamic::SwapBackBufferToScreen()
 	auto cmdListAlloc = DxCMDAlloc;
 	auto rt = mRenderTargets["SwapToScreen"];
 
-	// Reuse the memory associated with command recording.
-	// We can only reset when the associated command lists have finished execution on the GPU.
-	IfFailedHResultFile(cmdListAlloc->Reset());
 
-	// A command list can be reset after it has been added to the command queue via ExecuteCommandList.
-	// Reusing the command list reuses memory.
-	IfFailedHResultFile(DxCMDList->Reset(cmdListAlloc.Get(), mPSOs["SwapToScreen"].Get()));
+	DxCMDList->SetPipelineState(mPSOs["SwapToScreen"].Get());
 
 	DxCMDList->RSSetViewports(1, &mViewPort);
 	DxCMDList->RSSetScissorRects(1, &mRect);
@@ -576,8 +651,9 @@ void D3D12RHIDynamic::SwapBackBufferToScreen()
 	DxCMDList->SetDescriptorHeaps(_countof(descriptorHeaps), descriptorHeaps);
 
 	DxCMDList->SetGraphicsRootSignature(mRootSignatures["SwapToScreen"].Get());
+	
 
-
+	ImGui_ImplDX12_RenderDrawData(ImGui::GetDrawData(), DxCMDList.Get());
 	// Indicate a state transition on the resource usage.
 	auto a_barrier = CD3DX12_RESOURCE_BARRIER::Transition(rt->RTVTexture[iCurrentBackBuffer].Resource.Resource.Get(),
 		D3D12_RESOURCE_STATE_RENDER_TARGET, D3D12_RESOURCE_STATE_PRESENT);
@@ -585,7 +661,12 @@ void D3D12RHIDynamic::SwapBackBufferToScreen()
 
 	//std::cout << iCurrentBackBuffer << '\n';
 
-	IfFailedHResultFile(DxDevice->GetDeviceRemovedReason());
+	auto& io = ImGui::GetIO();
+	if (io.ConfigFlags & ImGuiConfigFlags_ViewportsEnable)
+	{
+		ImGui::UpdatePlatformWindows();
+		ImGui::RenderPlatformWindowsDefault(NULL, (void*)DxCMDList.Get());
+	}
 }
 
 void D3D12RHIDynamic::BeginRecordCommandList()
@@ -605,6 +686,17 @@ void D3D12RHIDynamic::ExecuteCommandList()
 
 	// Wait until initialization is complete.
 	FlushCommand();
+}
+
+void* D3D12RHIDynamic::GetTextureDataForUI(TextureUsage flags, uint32 offset)
+{
+	if (flags == TU_RenderTarget)
+	{
+		CD3DX12_GPU_DESCRIPTOR_HANDLE handle{ OfflineDescriptorHeapManager.OffScreenRenderDescHeap->GetGPUDescriptorHandleForHeapStart() };
+		handle.Offset(offset,mCbvSrvUavDescriptorSize);
+		return (void*)handle.ptr;
+	}
+	return nullptr;
 }
 
 D3D12_FILTER D3D12RHIDynamic::GetDX12Filter(RHISamplerFilter Filter)
@@ -769,7 +861,7 @@ D3D12_COMPARISON_FUNC D3D12RHIDynamic::CastComparison(ComparisonFunc cf)
 void D3D12RHIDynamic::AllocTextureHeap(int32 texture_nums)
 {
 }
-#define _DEBUG
+
 bool D3D12RHIDynamic::InitDirectX12()
 {
 #if defined(DEBUG) || defined(_DEBUG) 
@@ -845,6 +937,8 @@ bool D3D12RHIDynamic::InitSwapToScreenRTVandDSV()
 	rt->CreateSwapToScreenHeaps(DxDevice.Get(), DxSwapChain.Get());
 	
 	mRenderTargets[rt->RTName] = std::move(rt);
+	SwapChainBufferWidth = mGlobalSystemContext.mWindowSystem->WindowSize.x;
+	SwapChainBufferHeight = mGlobalSystemContext.mWindowSystem->WindowSize.y;
 	OnResizeWindow(SwapChainBufferWidth, SwapChainBufferHeight);
 	return true;
 }
